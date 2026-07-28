@@ -136,7 +136,7 @@ class SitekeyDetector:
         page.wait_for_timeout(self._browser.PAGE_SETTLE_WAIT_MS)
 
         for _attempt in range(self._browser.DOM_EXTRACTION_MAX_ATTEMPTS):
-            sitekey = page.evaluate(f'''() => {{
+            sitekey = page.evaluate(f"""() => {{
                 const cfDiv = document.querySelector('{self._cf.SITEKEY_ATTR_SELECTOR}');
                 if (cfDiv) return cfDiv.getAttribute('data-sitekey');
 
@@ -149,7 +149,7 @@ class SitekeyDetector:
                 }}
 
                 return null;
-            }}''')
+            }}""")
 
             if sitekey and self._is_valid_sitekey(sitekey):
                 return sitekey
@@ -173,14 +173,14 @@ class SitekeyDetector:
 
         for bundle_url in sorted_bundles:
             try:
-                content = page.evaluate(f'''async () => {{
+                content = page.evaluate(f"""async () => {{
                     try {{
                         const response = await fetch("{bundle_url}");
                         return await response.text();
                     }} catch (e) {{
                         return "";
                     }}
-                }}''')
+                }}""")
 
                 if not content or "turnstile" not in content.lower():
                     continue

@@ -39,9 +39,7 @@ class CaptchaSolver:
             self.browser = self._camoufox_context.__enter__()
             logger.debug("Browser started")
         except ImportError as e:
-            raise ImportError(
-                "Camoufox is required. Install with: pip install camoufox"
-            ) from e
+            raise ImportError("Camoufox is required. Install with: pip install camoufox") from e
 
     def stop(self):
         """Stop the browser."""
