@@ -405,5 +405,26 @@ def info():
     console.print(panel)
 
 
+@app.command()
+def server(
+    host: str = typer.Option("0.0.0.0", "--host", "-h", help="Host to bind"),
+    port: int = typer.Option(5000, "--port", "-p", help="Port to bind"),
+    debug: bool = typer.Option(False, "--debug", "-d", help="Enable debug mode"),
+):
+    """Start REST API server."""
+    from src.api.server import create_app
+
+    flask_app = create_app()
+    console.print(Panel(
+        f"[green]✓ Server starting...[/green]\n\n"
+        f"[bold]URL:[/bold] http://{host}:{port}\n"
+        f"[bold]Debug:[/bold] {debug}\n\n"
+        "[dim]Endpoints: /, /health, /solve, /detect, /sitekeys[/dim]",
+        title="Alap-Alap API Server",
+        border_style="green"
+    ))
+    flask_app.run(host=host, port=port, debug=debug)
+
+
 if __name__ == "__main__":
     app()

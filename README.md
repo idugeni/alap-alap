@@ -192,6 +192,7 @@ if sitekey:
 |---------|-------------|
 | `python main.py solve <url>` | Solve captcha (auto-detect sitekey) |
 | `python main.py detect <url>` | Detect sitekey only |
+| `python main.py server` | Start REST API server |
 | `python main.py health` | Check dependencies status |
 | `python main.py info` | Show project information |
 | `python main.py sitekeys list` | List all sitekeys |
@@ -209,11 +210,66 @@ if sitekey:
 | `--retries, -r` | Number of retry attempts |
 | `--output, -o` | Output file (default: `results.txt`) |
 
+### Server Options
+
+| Option | Description |
+|--------|-------------|
+| `--host, -h` | Host to bind (default: 0.0.0.0) |
+| `--port, -p` | Port to bind (default: 5000) |
+| `--debug, -d` | Enable debug mode |
+
 ---
 
 ## 🔌 API Reference
 
-### `AlapAlap`
+### REST API Server
+
+Start the server:
+
+```bash
+python main.py server --port 5000
+```
+
+**Endpoints:**
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | API info |
+| GET | `/health` | Health check |
+| POST | `/solve` | Solve captcha |
+| POST | `/detect` | Detect sitekey |
+| GET | `/sitekeys` | List all sitekeys |
+
+**Example: Solve captcha**
+
+```bash
+curl -X POST http://localhost:5000/solve \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/login", "invisible": true}'
+```
+
+**Example: Detect sitekey**
+
+```bash
+curl -X POST http://localhost:5000/detect \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/login"}'
+```
+
+**Response format:**
+
+```json
+{
+  "success": true,
+  "token": "0...",
+  "sitekey": "0x4AAAAAAA...",
+  "time": 2.5
+}
+```
+
+### Python API
+
+#### `AlapAlap`
 
 Main solver class.
 
