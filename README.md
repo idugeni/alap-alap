@@ -6,10 +6,11 @@
 
 *Like a falcon — fast, precise, and unstoppable*
 
-[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-00FF00?style=for-the-badge)](LICENSE)
 [![Camoufox](https://img.shields.io/badge/Browser-Camoufox-FF6B00?style=for-the-badge&logo=firefox&logoColor=white)](https://camoufox.com)
-[![Tests](https://img.shields.io/badge/Tests-15%20Passed-brightgreen?style=for-the-badge)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-31%20Passed-brightgreen?style=for-the-badge)](#testing)
+[![CI](https://img.shields.io/badge/CI-Passing-brightgreen?style=for-the-badge)](https://github.com/idugeni/alap-alap/actions)
 [![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)]()
 
 <br>
@@ -55,7 +56,7 @@
 </td>
 <td>
 
-📝 **Smart Logging** — JSON results with timestamps
+📝 **Smart Logging** — Loguru with auto-cleanup
 
 </td>
 </tr>
@@ -71,6 +72,18 @@
 
 </td>
 </tr>
+<tr>
+<td>
+
+💾 **Database** — Store solved captchas for sharing
+
+</td>
+<td>
+
+🔄 **Auto Retry** — Exponential backoff
+
+</td>
+</tr>
 </table>
 
 ---
@@ -81,7 +94,7 @@
 
 ```bash
 # Clone
-git clone https://github.com/your-username/alap-alap.git
+git clone https://github.com/idugeni/alap-alap.git
 cd alap-alap
 
 # Run setup (creates .venv + installs everything)
@@ -128,11 +141,20 @@ python main.py solve https://example.com/login --sitekey 0x4AAAAAAAQV1p8gT2jN3m4
 # Solve with proxy
 python main.py solve https://example.com/login --proxy user:pass@host:port
 
+# Solve with retry
+python main.py solve https://example.com/login --retries 3
+
 # Check dependencies
 python main.py health
 
 # Show project info
 python main.py info
+
+# Manage sitekeys database
+python main.py sitekeys list
+python main.py sitekeys search etherscan
+python main.py sitekeys export
+python main.py sitekeys stats
 ```
 
 ### Python API
@@ -172,6 +194,10 @@ if sitekey:
 | `python main.py detect <url>` | Detect sitekey only |
 | `python main.py health` | Check dependencies status |
 | `python main.py info` | Show project information |
+| `python main.py sitekeys list` | List all sitekeys |
+| `python main.py sitekeys search <query>` | Search sitekeys |
+| `python main.py sitekeys export` | Export to SITEKEYS.md |
+| `python main.py sitekeys stats` | Show statistics |
 
 ### Solve Options
 
@@ -180,6 +206,7 @@ if sitekey:
 | `--sitekey, -s` | Use known sitekey |
 | `--proxy, -p` | Use proxy (`user:pass@host:port`) |
 | `--visible, -v` | Use visible browser mode |
+| `--retries, -r` | Number of retry attempts |
 | `--output, -o` | Output file (default: `results.txt`) |
 
 ---
@@ -240,9 +267,14 @@ Centralized configuration.
 ```python
 from src.config import config
 
-# Access configuration
+# Browser settings
 print(config.browser.USER_AGENT)
+print(config.browser.HTTP_TIMEOUT)
+
+# Mouse movement settings
 print(config.mouse.MOVE_THRESHOLD_PX)
+
+# Solver settings
 print(config.solver.INVISIBLE_SOLVE_MAX_ATTEMPTS)
 ```
 
@@ -296,20 +328,26 @@ alap-alap/
 ├── src/
 │   ├── __init__.py
 │   ├── config.py           # Centralized configuration
-│   ├── core/               # AlapAlap main class
-│   │   ├── __init__.py
-│   │   └── main.py
-│   ├── detector/           # Sitekey detection
-│   │   ├── __init__.py
+│   ├── logger.py           # Logging with auto-cleanup
+│   ├── sitekeys_db.py      # Captcha database
+│   ├── core/
+│   │   └── main.py         # AlapAlap main class
+│   ├── detector/
 │   │   └── sitekey_detector.py
-│   └── solver/             # Captcha solving
-│       ├── __init__.py
+│   └── solver/
 │       └── captcha_solver.py
-├── tests/                  # Test suite
+├── tests/
 │   ├── unit/
+│   │   ├── test_config.py
+│   │   ├── test_detector.py
+│   │   ├── test_logger.py
+│   │   ├── test_sitekeys_db.py
+│   │   └── test_solver.py
 │   └── integration/
+│       └── test_full_flow.py
 ├── requirements.txt
-└── pyproject.toml
+├── pyproject.toml
+└── .github/workflows/ci.yml
 ```
 
 ---
@@ -372,14 +410,14 @@ black src/ tests/
 ruff check src/ tests/
 
 # Type check
-mypy src/
+pyright src/
 ```
 
 ---
 
 ## 📋 Requirements
 
-- Python 3.8+
+- Python 3.10+
 - Camoufox
 - Playwright
 - Requests
@@ -398,10 +436,10 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-**Built with 🦅 by Alap-Alap Team**
+**Built with 🦅 by [idugeni](https://github.com/idugeni)**
 
 *Fast as a falcon, smart as a hunter*
 
-[![GitHub](https://img.shields.io/badge/GitHub-alap--alap-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/your-username/alap-alap)
+[![GitHub](https://img.shields.io/badge/GitHub-idugeni-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/idugeni/alap-alap)
 
 </div>

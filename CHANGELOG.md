@@ -64,4 +64,4 @@ This is the first stable release. No upgrade notes needed.
 
 ## Support
 
-For issues and feature requests, please visit [GitHub Issues](https://github.com/your-username/alap-alap/issues).
+For issues and feature requests, please visit [GitHub Issues](https://github.com/idugeni/alap-alap/issues).

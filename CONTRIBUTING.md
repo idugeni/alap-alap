@@ -37,7 +37,7 @@ Please be respectful and professional in all interactions. We are building a com
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/alap-alap.git
+git clone https://github.com/idugeni/alap-alap.git
 cd alap-alap
 
 # Create virtual environment
