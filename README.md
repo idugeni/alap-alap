@@ -375,6 +375,17 @@ config.solver.IFRAME_WAIT_MAX_ATTEMPTS      # Iframe wait
 # Sitekey validation
 config.sitekey.MIN_LENGTH        # Minimum sitekey length
 config.sitekey.FALSE_POSITIVES   # Invalid sitekey list
+
+# Retry settings (auto-retry on failure)
+config.retry.MAX_RETRIES         # Max retry attempts
+config.retry.RETRY_DELAY_BASE    # Base delay between retries
+config.retry.RETRY_DELAY_MAX     # Max delay cap
+config.retry.RATE_LIMIT_DELAY    # Delay when rate limited (429)
+
+# Logging settings (auto-rotation)
+config.logging.LOG_MAX_SIZE_MB   # Max log size before rotation
+config.logging.LOG_BACKUP_COUNT  # Number of backup logs to keep
+config.logging.LOG_RETENTION_DAYS # Days to keep old logs
 ```
 
 ---
