@@ -147,8 +147,21 @@ def solve(
             break
 
         if attempt < retries - 1:
-            delay = min(config.retry.RETRY_DELAY_BASE * (2 ** attempt), config.retry.RETRY_DELAY_MAX)
-            logger.info(f"Waiting {delay:.1f}s before retry...")
+            # Check for rate limit or timeout errors
+            error = result.get("error", "")
+            is_rate_limit = "rate limit" in error.lower() or "429" in error
+            is_timeout = "timeout" in error.lower()
+
+            if is_rate_limit:
+                delay = config.retry.RATE_LIMIT_DELAY
+                logger.warning(f"Rate limited. Waiting {delay:.1f}s...")
+            elif is_timeout:
+                delay = min(config.retry.RETRY_DELAY_BASE * (2 ** attempt), config.retry.RETRY_DELAY_MAX)
+                logger.warning(f"Timeout. Waiting {delay:.1f}s...")
+            else:
+                delay = min(config.retry.RETRY_DELAY_BASE * (2 ** attempt), config.retry.RETRY_DELAY_MAX)
+                logger.info(f"Waiting {delay:.1f}s before retry...")
+
             time.sleep(delay)
 
     entry = SolveResult(

@@ -8,6 +8,7 @@ Intelligent sitekey detection using multiple methods:
 """
 
 import re
+import time
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -93,6 +94,13 @@ class SitekeyDetector:
         """Extract sitekey from static HTML."""
         try:
             response = requests.get(url, headers=self.headers, timeout=self._browser.HTTP_TIMEOUT)
+
+            # Handle rate limiting
+            if response.status_code == 429:
+                logger.warning(f"Rate limited on {url}, waiting...")
+                time.sleep(config.retry.RATE_LIMIT_DELAY)
+                return None
+
             response.raise_for_status()
             html = response.text
 

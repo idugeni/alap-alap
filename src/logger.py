@@ -34,12 +34,13 @@ def setup_logger():
 
     # File handler with rotation
     log_path = log_dir / cfg.LOG_FILE
+    rotation_size = f"{cfg.LOG_MAX_SIZE_MB} MB"
     logger.add(
         str(log_path),
         format=cfg.LOG_FORMAT,
         level="DEBUG",
-        rotation=cfg.LOG_ROTATION,
-        retention=cfg.LOG_RETENTION_DAYS,
+        rotation=rotation_size,
+        retention=cfg.LOG_BACKUP_COUNT,
         compression=cfg.LOG_COMPRESSION,
         encoding="utf-8",
     )
