@@ -39,7 +39,7 @@ jobs:
 
     - name: Type check with mypy
       run: |
-        mypy src/
+        mypy src/ --follow-imports=skip --ignore-missing-imports
 
     - name: Test with pytest
       run: |

@@ -70,9 +70,9 @@ class SitekeysDB:
         self,
         sitekey: str,
         url: str,
-        platform_name: str = None,
+        platform_name: str | None = None,
         status: str = "unknown",
-        tags: list[str] = None,
+        tags: list[str] | None = None,
     ) -> SitekeyEntry:
         """Add or update a sitekey entry."""
         domain = self._extract_domain(url)
