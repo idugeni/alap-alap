@@ -6,7 +6,6 @@ Solves Cloudflare Turnstile captchas using Camoufox for fingerprint resistance.
 
 import random
 import time
-from typing import Optional
 
 from loguru import logger
 
@@ -21,7 +20,7 @@ class CaptchaSolver:
     mouse movement to bypass bot detection.
     """
 
-    def __init__(self, proxy: Optional[str] = None, headless: bool = True):
+    def __init__(self, proxy: str | None = None, headless: bool = True):
         self.proxy = proxy
         self.headless = headless
         self.browser = None
@@ -137,14 +136,14 @@ class CaptchaSolver:
 
         return x, y
 
-    def _get_token(self, page) -> Optional[str]:
+    def _get_token(self, page) -> str | None:
         """Get token from page."""
         elem = page.query_selector(self._cf.RESPONSE_SELECTOR)
         if elem and elem.get_attribute("value"):
             return elem.get_attribute("value")
         return None
 
-    def _solve_invisible(self, page, window_width: int, window_height: int) -> Optional[str]:
+    def _solve_invisible(self, page, window_width: int, window_height: int) -> str | None:
         """Solve invisible Turnstile captcha."""
         current_x, current_y = 0, 0
 
@@ -162,7 +161,7 @@ class CaptchaSolver:
 
         return None
 
-    def _solve_visible(self, page, window_width: int, window_height: int) -> Optional[str]:
+    def _solve_visible(self, page, window_width: int, window_height: int) -> str | None:
         """Solve visible Turnstile captcha."""
         current_x, current_y = 0, 0
 

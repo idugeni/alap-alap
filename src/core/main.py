@@ -5,7 +5,6 @@ Main entry point for the Alap-Alap captcha solver.
 """
 
 import time
-from typing import Optional
 
 from loguru import logger
 
@@ -28,7 +27,7 @@ class AlapAlap:
         ...     print(result)
     """
 
-    def __init__(self, proxy: Optional[str] = None, headless: bool = True):
+    def __init__(self, proxy: str | None = None, headless: bool = True):
         """
         Initialize Alap-Alap solver.
 

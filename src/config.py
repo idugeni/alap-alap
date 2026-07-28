@@ -5,7 +5,6 @@ Centralized configuration for all constants and settings.
 """
 
 from dataclasses import dataclass, field
-from typing import List
 
 
 @dataclass(frozen=True)
@@ -78,7 +77,7 @@ class SitekeyConfig:
 
     MIN_LENGTH: int = 20
     CF_FORMAT_MIN_LENGTH: int = 25
-    FALSE_POSITIVES: List[str] = field(
+    FALSE_POSITIVES: list[str] = field(
         default_factory=lambda: [
             "invalidsitekey",
             "test",
@@ -106,7 +105,7 @@ class RetryConfig:
     RETRY_DELAY_BASE: float = 2.0
     RETRY_DELAY_MAX: float = 30.0
     RATE_LIMIT_DELAY: float = 5.0
-    TIMEOUT_RETRY_CODES: List[int] = field(default_factory=lambda: [408, 429, 500, 502, 503, 504])
+    TIMEOUT_RETRY_CODES: list[int] = field(default_factory=lambda: [408, 429, 500, 502, 503, 504])
 
 
 @dataclass(frozen=True)

@@ -8,7 +8,6 @@ Intelligent sitekey detection using multiple methods:
 """
 
 import re
-from typing import List, Optional
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -39,14 +38,14 @@ class SitekeyDetector:
         (r'["\']?(0x4[A-Za-z0-9_-]{20,})["\']?', "Cloudflare sitekey format"),
     ]
 
-    def __init__(self, proxy: Optional[str] = None):
+    def __init__(self, proxy: str | None = None):
         self.proxy = proxy
         self._browser = config.browser
         self._sitekey = config.sitekey
         self._cf = config.cloudflare
         self.headers = {"User-Agent": self._browser.USER_AGENT}
 
-    def detect(self, url: str) -> Optional[str]:
+    def detect(self, url: str) -> str | None:
         """
         Detect sitekey from URL using multiple methods.
 
@@ -74,7 +73,7 @@ class SitekeyDetector:
 
         return None
 
-    def _extract_from_url(self, url: str) -> Optional[str]:
+    def _extract_from_url(self, url: str) -> str | None:
         """Extract sitekey from URL parameters."""
         try:
             parsed = urlparse(url)
@@ -90,7 +89,7 @@ class SitekeyDetector:
             pass
         return None
 
-    def _extract_from_html(self, url: str) -> Optional[str]:
+    def _extract_from_html(self, url: str) -> str | None:
         """Extract sitekey from static HTML."""
         try:
             response = requests.get(url, headers=self.headers, timeout=self._browser.HTTP_TIMEOUT)
@@ -107,7 +106,7 @@ class SitekeyDetector:
             pass
         return None
 
-    def _extract_with_browser(self, url: str) -> Optional[str]:
+    def _extract_with_browser(self, url: str) -> str | None:
         """Extract sitekey using Camoufox browser."""
         try:
             from camoufox.sync_api import Camoufox
@@ -122,7 +121,7 @@ class SitekeyDetector:
             logger.error(f"Browser error: {e}")
             return None
 
-    def _analyze_page(self, page, url: str) -> Optional[str]:
+    def _analyze_page(self, page, url: str) -> str | None:
         """Analyze page for sitekey."""
         js_bundles = []
 
@@ -158,7 +157,7 @@ class SitekeyDetector:
 
         return self._analyze_js_bundles(page, js_bundles)
 
-    def _analyze_js_bundles(self, page, js_bundles: List[str]) -> Optional[str]:
+    def _analyze_js_bundles(self, page, js_bundles: list[str]) -> str | None:
         """Analyze JavaScript bundles for sitekey."""
         priority_keywords = ["turnstile", "auth", "login", "signup", "challenge"]
 

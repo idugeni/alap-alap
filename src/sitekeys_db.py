@@ -8,7 +8,6 @@ import json
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from loguru import logger
 
@@ -30,7 +29,7 @@ class SitekeyEntry:
     success_count: int = 0
     last_token: str = ""  # Last solved token (for proof)
     last_solve_time: float = 0.0  # Last solve time in seconds
-    tags: List[str] = None
+    tags: list[str] = None
 
     def __post_init__(self):
         if self.tags is None:
@@ -40,9 +39,9 @@ class SitekeyEntry:
 class SitekeysDB:
     """Sitekeys database manager."""
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: str | None = None):
         self.db_path = Path(db_path or config.storage.DATABASE_FILE)
-        self._data: Dict[str, SitekeyEntry] = {}
+        self._data: dict[str, SitekeyEntry] = {}
         self._load()
 
     def _load(self):
@@ -73,7 +72,7 @@ class SitekeysDB:
         url: str,
         platform_name: str = None,
         status: str = "unknown",
-        tags: List[str] = None,
+        tags: list[str] = None,
     ) -> SitekeyEntry:
         """Add or update a sitekey entry."""
         domain = self._extract_domain(url)
@@ -159,23 +158,23 @@ class SitekeysDB:
             entry.last_seen = datetime.now(timezone.utc).isoformat()
             self._save()
 
-    def get(self, sitekey: str) -> Optional[SitekeyEntry]:
+    def get(self, sitekey: str) -> SitekeyEntry | None:
         """Get a sitekey entry."""
         return self._data.get(sitekey)
 
-    def get_all(self) -> List[SitekeyEntry]:
+    def get_all(self) -> list[SitekeyEntry]:
         """Get all sitekey entries."""
         return list(self._data.values())
 
-    def get_by_domain(self, domain: str) -> List[SitekeyEntry]:
+    def get_by_domain(self, domain: str) -> list[SitekeyEntry]:
         """Get sitekeys by domain."""
         return [e for e in self._data.values() if e.domain == domain]
 
-    def get_active(self) -> List[SitekeyEntry]:
+    def get_active(self) -> list[SitekeyEntry]:
         """Get all active sitekeys."""
         return [e for e in self._data.values() if e.status == "active"]
 
-    def search(self, query: str) -> List[SitekeyEntry]:
+    def search(self, query: str) -> list[SitekeyEntry]:
         """Search sitekeys by query."""
         query_lower = query.lower()
         return [
