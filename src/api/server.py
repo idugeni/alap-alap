@@ -15,16 +15,18 @@ def create_app() -> Flask:
     @app.route("/")
     def index():
         """API info."""
-        return jsonify({
-            "name": "Alap-Alap API",
-            "version": "1.0.0",
-            "endpoints": {
-                "/solve": "POST - Solve captcha",
-                "/detect": "POST - Detect sitekey",
-                "/health": "GET - Health check",
-                "/sitekeys": "GET - List sitekeys",
+        return jsonify(
+            {
+                "name": "Alap-Alap API",
+                "version": "1.0.0",
+                "endpoints": {
+                    "/solve": "POST - Solve captcha",
+                    "/detect": "POST - Detect sitekey",
+                    "/health": "GET - Health check",
+                    "/sitekeys": "GET - List sitekeys",
+                },
             }
-        })
+        )
 
     @app.route("/health")
     def health():
@@ -51,6 +53,7 @@ def create_app() -> Flask:
 
         try:
             from src.detector import SitekeyDetector
+
             detector = SitekeyDetector()
             sitekey = detector.detect(url)
 
@@ -115,19 +118,21 @@ def create_app() -> Flask:
         from src.sitekeys_db import sitekeys_db
 
         entries = sitekeys_db.get_all()
-        return jsonify({
-            "count": len(entries),
-            "sitekeys": [
-                {
-                    "sitekey": e.sitekey,
-                    "platform": e.platform_name,
-                    "domain": e.domain,
-                    "status": e.status,
-                    "solve_count": e.solve_count,
-                    "success_count": e.success_count,
-                }
-                for e in entries
-            ]
-        })
+        return jsonify(
+            {
+                "count": len(entries),
+                "sitekeys": [
+                    {
+                        "sitekey": e.sitekey,
+                        "platform": e.platform_name,
+                        "domain": e.domain,
+                        "status": e.status,
+                        "solve_count": e.solve_count,
+                        "success_count": e.success_count,
+                    }
+                    for e in entries
+                ],
+            }
+        )
 
     return app
