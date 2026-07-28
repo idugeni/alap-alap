@@ -37,9 +37,9 @@ jobs:
       run: |
         black --check src/ tests/
 
-    - name: Type check with mypy
+    - name: Type check with pyright
       run: |
-        mypy src/ --follow-imports=skip --ignore-missing-imports || true
+        pyright src/
 
     - name: Test with pytest
       run: |

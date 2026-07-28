@@ -27,7 +27,7 @@ dev = [
     "pytest-cov",
     "black",
     "ruff",
-    "mypy",
+    "pyright",
 ]
 
 [tool.black]
@@ -41,15 +41,11 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM"]
 
-[tool.mypy]
-python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = ["numpy.*"]
-ignore_missing_imports = true
+[tool.pyright]
+pythonVersion = "3.10"
+typeCheckingMode = "off"
+reportMissingImports = false
+reportMissingTypeStubs = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
