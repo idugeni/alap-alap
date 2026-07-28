@@ -1,8 +1,8 @@
 """Unit tests for sitekeys database."""
 
 import os
-import json
 import tempfile
+
 from src.sitekeys_db import SitekeysDB
 
 
@@ -11,17 +11,18 @@ class TestSitekeysDB:
 
     def setup_method(self):
         """Create temp database for each test."""
-        self.temp_db = tempfile.NamedTemporaryFile(suffix=".json", delete=False)
-        self.temp_db.close()
-        self.db = SitekeysDB(db_path=self.temp_db.name)
+        self.temp_path = tempfile.mktemp(suffix=".json")
+        self.db = SitekeysDB(db_path=self.temp_path)
 
     def teardown_method(self):
         """Cleanup temp database."""
-        if os.path.exists(self.temp_db.name):
-            os.remove(self.temp_db.name)
+        if os.path.exists(self.temp_path):
+            os.remove(self.temp_path)
 
     def test_add_sitekey(self):
-        entry = self.db.add("0x4AAAAAAA1234567890123", "https://example.com", platform_name="Example")
+        entry = self.db.add(
+            "0x4AAAAAAA1234567890123", "https://example.com", platform_name="Example"
+        )
         assert entry.sitekey == "0x4AAAAAAA1234567890123"
         assert entry.platform_name == "Example"
         assert entry.domain == "example.com"
@@ -39,7 +40,9 @@ class TestSitekeysDB:
 
     def test_record_solve(self):
         self.db.add("0x4AAAAAAA1234567890123", "https://example.com")
-        self.db.record_solve("0x4AAAAAAA1234567890123", success=True, token="test-token-123", solve_time=5.0)
+        self.db.record_solve(
+            "0x4AAAAAAA1234567890123", success=True, token="test-token-123", solve_time=5.0
+        )
         entry = self.db.get("0x4AAAAAAA1234567890123")
         assert entry.solve_count == 1
         assert entry.success_count == 1

@@ -1,10 +1,9 @@
 """Unit tests for logger module."""
 
-import os
 import shutil
 from pathlib import Path
-from src.logger import setup_logger, clean_old_logs, get_log_stats
-from src.config import config
+
+from src.logger import clean_old_logs, get_log_stats, setup_logger
 
 
 class TestLogger:

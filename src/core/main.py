@@ -6,6 +6,7 @@ Main entry point for the Alap-Alap captcha solver.
 
 import time
 from typing import Optional
+
 from loguru import logger
 
 from ..detector import SitekeyDetector
@@ -70,7 +71,7 @@ class AlapAlap:
                 "token": None,
                 "sitekey": None,
                 "error": "Could not detect sitekey",
-                "time": time.time() - start_time
+                "time": time.time() - start_time,
             }
 
         logger.info(f"Solving captcha for {url}")
@@ -84,7 +85,7 @@ class AlapAlap:
                 "token": token,
                 "sitekey": sitekey,
                 "error": None,
-                "time": elapsed
+                "time": elapsed,
             }
         else:
             logger.error(f"Solver failed for {url}")
@@ -93,7 +94,7 @@ class AlapAlap:
                 "token": None,
                 "sitekey": sitekey,
                 "error": "Solver failed",
-                "time": elapsed
+                "time": elapsed,
             }
 
     def solve_with_sitekey(self, url: str, sitekey: str, invisible: bool = True) -> dict:
@@ -121,7 +122,7 @@ class AlapAlap:
                 "token": token,
                 "sitekey": sitekey,
                 "error": None,
-                "time": elapsed
+                "time": elapsed,
             }
         else:
             logger.error(f"Solver failed for {url}")
@@ -130,5 +131,5 @@ class AlapAlap:
                 "token": None,
                 "sitekey": sitekey,
                 "error": "Solver failed",
-                "time": elapsed
+                "time": elapsed,
             }

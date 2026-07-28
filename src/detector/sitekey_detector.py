@@ -8,9 +8,10 @@ Intelligent sitekey detection using multiple methods:
 """
 
 import re
+from typing import List, Optional
+from urllib.parse import parse_qs, urlparse
+
 import requests
-from typing import Optional, List
-from urllib.parse import urlparse, parse_qs
 from loguru import logger
 
 from src.config import config
@@ -33,9 +34,9 @@ class SitekeyDetector:
     ]
 
     JS_BUNDLE_PATTERNS = [
-        (r'sitekey\s*[:=]\s*["\']([0-9a-zA-Z_-]{20,})["\']', 'sitekey assignment'),
-        (r'data-sitekey\s*=\s*["\']([0-9a-zA-Z_-]{20,})["\']', 'data-sitekey'),
-        (r'["\']?(0x4[A-Za-z0-9_-]{20,})["\']?', 'Cloudflare sitekey format'),
+        (r'sitekey\s*[:=]\s*["\']([0-9a-zA-Z_-]{20,})["\']', "sitekey assignment"),
+        (r'data-sitekey\s*=\s*["\']([0-9a-zA-Z_-]{20,})["\']', "data-sitekey"),
+        (r'["\']?(0x4[A-Za-z0-9_-]{20,})["\']?', "Cloudflare sitekey format"),
     ]
 
     def __init__(self, proxy: Optional[str] = None):
@@ -43,7 +44,7 @@ class SitekeyDetector:
         self._browser = config.browser
         self._sitekey = config.sitekey
         self._cf = config.cloudflare
-        self.headers = {'User-Agent': self._browser.USER_AGENT}
+        self.headers = {"User-Agent": self._browser.USER_AGENT}
 
     def detect(self, url: str) -> Optional[str]:
         """
@@ -78,13 +79,13 @@ class SitekeyDetector:
         try:
             parsed = urlparse(url)
             params = parse_qs(parsed.query)
-            if 'sitekey' in params:
-                return params['sitekey'][0]
-            if '#' in url:
-                fragment = url.split('#')[1]
+            if "sitekey" in params:
+                return params["sitekey"][0]
+            if "#" in url:
+                fragment = url.split("#")[1]
                 fragment_params = parse_qs(fragment)
-                if 'sitekey' in fragment_params:
-                    return fragment_params['sitekey'][0]
+                if "sitekey" in fragment_params:
+                    return fragment_params["sitekey"][0]
         except Exception:
             pass
         return None
@@ -126,20 +127,22 @@ class SitekeyDetector:
         js_bundles = []
 
         def handle_request(request):
-            if request.url.endswith('.js') or '.js?' in request.url:
+            if request.url.endswith(".js") or ".js?" in request.url:
                 js_bundles.append(request.url)
 
-        page.on('request', handle_request)
+        page.on("request", handle_request)
 
-        page.goto(url, wait_until='domcontentloaded', timeout=self._browser.PAGE_GOTO_TIMEOUT_MS)
+        page.goto(url, wait_until="domcontentloaded", timeout=self._browser.PAGE_GOTO_TIMEOUT_MS)
         page.wait_for_timeout(self._browser.PAGE_SETTLE_WAIT_MS)
 
-        for attempt in range(self._browser.DOM_EXTRACTION_MAX_ATTEMPTS):
+        for _attempt in range(self._browser.DOM_EXTRACTION_MAX_ATTEMPTS):
             sitekey = page.evaluate(f'''() => {{
                 const cfDiv = document.querySelector('{self._cf.SITEKEY_ATTR_SELECTOR}');
                 if (cfDiv) return cfDiv.getAttribute('data-sitekey');
 
-                const iframes = document.querySelectorAll('iframe[src*="{self._cf.CHALLENGE_DOMAIN}"]');
+                const iframes = document.querySelectorAll(
+                    'iframe[src*="{self._cf.CHALLENGE_DOMAIN}"]'
+                );
                 for (const iframe of iframes) {{
                     const match = iframe.src.match(/sitekey=([a-zA-Z0-9_-]+)/);
                     if (match) return match[1];
@@ -157,7 +160,7 @@ class SitekeyDetector:
 
     def _analyze_js_bundles(self, page, js_bundles: List[str]) -> Optional[str]:
         """Analyze JavaScript bundles for sitekey."""
-        priority_keywords = ['turnstile', 'auth', 'login', 'signup', 'challenge']
+        priority_keywords = ["turnstile", "auth", "login", "signup", "challenge"]
 
         def get_priority(url):
             url_lower = url.lower()
@@ -179,10 +182,10 @@ class SitekeyDetector:
                     }}
                 }}''')
 
-                if not content or 'turnstile' not in content.lower():
+                if not content or "turnstile" not in content.lower():
                     continue
 
-                for pattern, desc in self.JS_BUNDLE_PATTERNS:
+                for pattern, _desc in self.JS_BUNDLE_PATTERNS:
                     matches = re.findall(pattern, content, re.IGNORECASE)
                     for match in matches:
                         if self._is_valid_sitekey(match):
@@ -199,7 +202,7 @@ class SitekeyDetector:
             return False
         if key.lower() in self._sitekey.FALSE_POSITIVES:
             return False
-        if not (key.startswith(self._cf.SITEKEY_PREFIX) or
-                (len(key) > self._sitekey.CF_FORMAT_MIN_LENGTH and any(c.isdigit() for c in key))):
-            return False
-        return True
+        is_cf_format = len(key) > self._sitekey.CF_FORMAT_MIN_LENGTH and any(
+            c.isdigit() for c in key
+        )
+        return key.startswith(self._cf.SITEKEY_PREFIX) or is_cf_format

@@ -4,10 +4,7 @@ Alap-Alap Logger
 Smart logging with auto-cleaner for old logs.
 """
 
-import os
 import sys
-import glob
-import zipfile
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -32,7 +29,7 @@ def setup_logger():
         sys.stderr,
         format="<green>{time:HH:mm:ss}</green> | <level>{level:8}</level> | {message}",
         level=cfg.LOG_LEVEL,
-        colorize=True
+        colorize=True,
     )
 
     # File handler with rotation
@@ -44,7 +41,7 @@ def setup_logger():
         rotation=cfg.LOG_ROTATION,
         retention=cfg.LOG_RETENTION_DAYS,
         compression=cfg.LOG_COMPRESSION,
-        encoding="utf-8"
+        encoding="utf-8",
     )
 
     # Clean old logs on startup
@@ -87,10 +84,7 @@ def get_log_stats():
     files = list(log_dir.glob("*.log*"))
     total_size = sum(f.stat().st_size for f in files)
 
-    return {
-        "files": len(files),
-        "total_size_mb": round(total_size / (1024 * 1024), 2)
-    }
+    return {"files": len(files), "total_size_mb": round(total_size / (1024 * 1024), 2)}
 
 
 # Initialize logger on import

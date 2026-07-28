@@ -11,6 +11,7 @@ from typing import List
 @dataclass(frozen=True)
 class CloudflareConfig:
     """Cloudflare Turnstile configuration."""
+
     API_URL: str = "https://challenges.cloudflare.com/turnstile/v0/api.js"
     CHALLENGE_DOMAIN: str = "challenges.cloudflare.com"
     SITEKEY_PREFIX: str = "0x4"
@@ -23,6 +24,7 @@ class CloudflareConfig:
 @dataclass(frozen=True)
 class BrowserConfig:
     """Browser and network configuration."""
+
     HTTP_TIMEOUT: int = 10
     PAGE_GOTO_TIMEOUT_MS: int = 30000
     PAGE_SETTLE_WAIT_MS: int = 3000
@@ -38,6 +40,7 @@ class BrowserConfig:
 @dataclass(frozen=True)
 class MouseConfig:
     """Mouse movement configuration for human-like behavior."""
+
     MOVE_THRESHOLD_PX: int = 3
     BASE_SPEED_MIN: int = 1
     BASE_SPEED_MAX: int = 2
@@ -55,6 +58,7 @@ class MouseConfig:
 @dataclass(frozen=True)
 class SolverConfig:
     """Captcha solver configuration."""
+
     INVISIBLE_SOLVE_MAX_ATTEMPTS: int = 15
     TOKEN_WAIT_MAX_ATTEMPTS: int = 15
     IFRAME_WAIT_MAX_ATTEMPTS: int = 50
@@ -71,18 +75,33 @@ class SolverConfig:
 @dataclass(frozen=True)
 class SitekeyConfig:
     """Sitekey detection configuration."""
+
     MIN_LENGTH: int = 20
     CF_FORMAT_MIN_LENGTH: int = 25
-    FALSE_POSITIVES: List[str] = field(default_factory=lambda: [
-        'invalidsitekey', 'test', 'example', 'placeholder',
-        'dummy', 'fake', 'mock', 'sample', 'default',
-        'undefined', 'null', 'none', 'empty', 'missing'
-    ])
+    FALSE_POSITIVES: List[str] = field(
+        default_factory=lambda: [
+            "invalidsitekey",
+            "test",
+            "example",
+            "placeholder",
+            "dummy",
+            "fake",
+            "mock",
+            "sample",
+            "default",
+            "undefined",
+            "null",
+            "none",
+            "empty",
+            "missing",
+        ]
+    )
 
 
 @dataclass(frozen=True)
 class RetryConfig:
     """Retry and rate limiting configuration."""
+
     MAX_RETRIES: int = 3
     RETRY_DELAY_BASE: float = 2.0
     RETRY_DELAY_MAX: float = 30.0
@@ -93,6 +112,7 @@ class RetryConfig:
 @dataclass(frozen=True)
 class LoggingConfig:
     """Logging configuration."""
+
     LOG_DIR: str = "logs"
     LOG_FILE: str = "alap-alap.log"
     LOG_MAX_SIZE_MB: int = 10
@@ -107,6 +127,7 @@ class LoggingConfig:
 @dataclass(frozen=True)
 class StorageConfig:
     """Storage configuration."""
+
     DATABASE_FILE: str = "captcha_database.json"
     RESULTS_FILE: str = "results.txt"
 
@@ -114,6 +135,7 @@ class StorageConfig:
 @dataclass(frozen=True)
 class AppConfig:
     """Main application configuration."""
+
     cloudflare: CloudflareConfig = field(default_factory=CloudflareConfig)
     browser: BrowserConfig = field(default_factory=BrowserConfig)
     mouse: MouseConfig = field(default_factory=MouseConfig)

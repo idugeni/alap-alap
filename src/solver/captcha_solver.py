@@ -4,9 +4,10 @@ Alap-Alap Captcha Solver
 Solves Cloudflare Turnstile captchas using Camoufox for fingerprint resistance.
 """
 
-import time
 import random
+import time
 from typing import Optional
+
 from loguru import logger
 
 from src.config import config
@@ -33,11 +34,14 @@ class CaptchaSolver:
         """Start the browser."""
         try:
             from camoufox.sync_api import Camoufox
+
             self._camoufox_context = Camoufox(headless=self.headless)
             self.browser = self._camoufox_context.__enter__()
             logger.debug("Browser started")
-        except ImportError:
-            raise ImportError("Camoufox is required. Install with: pip install camoufox")
+        except ImportError as e:
+            raise ImportError(
+                "Camoufox is required. Install with: pip install camoufox"
+            ) from e
 
     def stop(self):
         """Stop the browser."""
@@ -195,13 +199,19 @@ class CaptchaSolver:
 
         cb_box = checkbox.bounding_box()
         divisor = self._solver.CHECKBOX_CLICK_ZONE_DIVISOR
-        x = cb_box["x"] + cb_box["width"] / divisor + random.randint(
-            int(cb_box["width"] / divisor),
-            int(cb_box["width"] - cb_box["width"] / divisor)
+        x = (
+            cb_box["x"]
+            + cb_box["width"] / divisor
+            + random.randint(
+                int(cb_box["width"] / divisor), int(cb_box["width"] - cb_box["width"] / divisor)
+            )
         )
-        y = cb_box["y"] + cb_box["height"] / divisor + random.randint(
-            int(cb_box["height"] / divisor),
-            int(cb_box["height"] - cb_box["height"] / divisor)
+        y = (
+            cb_box["y"]
+            + cb_box["height"] / divisor
+            + random.randint(
+                int(cb_box["height"] / divisor), int(cb_box["height"] - cb_box["height"] / divisor)
+            )
         )
 
         current_x, current_y = self._move_to(page, current_x, current_y, x, y)
