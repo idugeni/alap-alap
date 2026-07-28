@@ -43,7 +43,7 @@ jobs:
 
     - name: Test with pytest
       run: |
-        pytest --cov=alap_alap tests/
+        pytest --cov=src tests/
 
     - name: Upload coverage
       uses: codecov/codecov-action@v3

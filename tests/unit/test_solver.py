@@ -1,7 +1,5 @@
 """Unit tests for CaptchaSolver."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 from src.solver import CaptchaSolver
 
 

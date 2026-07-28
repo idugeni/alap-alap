@@ -10,7 +10,7 @@ build/
 
 # Virtual environments
 .env
-.venv
+.venv/
 env/
 venv/
 
@@ -36,3 +36,12 @@ Thumbs.db
 # Project specific
 test_direct.py
 test_solve_direct.py
+results.txt
+captcha_database.json
+
+# Tools
+.mimocode/
+.serena/
+
+# Logs
+logs/

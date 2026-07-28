@@ -11,6 +11,9 @@ import re
 import requests
 from typing import Optional, List
 from urllib.parse import urlparse, parse_qs
+from loguru import logger
+
+from src.config import config
 
 
 class SitekeyDetector:
@@ -21,12 +24,6 @@ class SitekeyDetector:
     - Fast: URL params, static HTML
     - Thorough: Camoufox browser + JavaScript bundle analysis
     """
-
-    FALSE_POSITIVES = [
-        'invalidsitekey', 'test', 'example', 'placeholder',
-        'dummy', 'fake', 'mock', 'sample', 'default',
-        'undefined', 'null', 'none', 'empty', 'missing'
-    ]
 
     SITEKEY_PATTERNS = [
         re.compile(r'data-sitekey=["\']([^"\']+)["\']', re.IGNORECASE),
@@ -43,9 +40,10 @@ class SitekeyDetector:
 
     def __init__(self, proxy: Optional[str] = None):
         self.proxy = proxy
-        self.headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        }
+        self._browser = config.browser
+        self._sitekey = config.sitekey
+        self._cf = config.cloudflare
+        self.headers = {'User-Agent': self._browser.USER_AGENT}
 
     def detect(self, url: str) -> Optional[str]:
         """
@@ -57,23 +55,20 @@ class SitekeyDetector:
         Returns:
             Detected sitekey or None
         """
-        # Method 1: URL parameters
         sitekey = self._extract_from_url(url)
         if sitekey:
-            print(f"[Alap-Alap] Sitekey found in URL: {sitekey}")
+            logger.info(f"Sitekey found in URL: {sitekey}")
             return sitekey
 
-        # Method 2: Static HTML
         sitekey = self._extract_from_html(url)
         if sitekey:
-            print(f"[Alap-Alap] Sitekey found in HTML: {sitekey}")
+            logger.info(f"Sitekey found in HTML: {sitekey}")
             return sitekey
 
-        # Method 3: Camoufox browser
-        print("[Alap-Alap] Using Camoufox for detection...")
+        logger.info("Using Camoufox for detection...")
         sitekey = self._extract_with_browser(url)
         if sitekey:
-            print(f"[Alap-Alap] Sitekey detected: {sitekey}")
+            logger.info(f"Sitekey detected: {sitekey}")
             return sitekey
 
         return None
@@ -97,7 +92,7 @@ class SitekeyDetector:
     def _extract_from_html(self, url: str) -> Optional[str]:
         """Extract sitekey from static HTML."""
         try:
-            response = requests.get(url, headers=self.headers, timeout=10)
+            response = requests.get(url, headers=self.headers, timeout=self._browser.HTTP_TIMEOUT)
             response.raise_for_status()
             html = response.text
 
@@ -120,10 +115,10 @@ class SitekeyDetector:
                 page = browser.new_page()
                 return self._analyze_page(page, url)
         except ImportError:
-            print("[Alap-Alap] Camoufox not available")
+            logger.warning("Camoufox not available")
             return None
         except Exception as e:
-            print(f"[Alap-Alap] Browser error: {e}")
+            logger.error(f"Browser error: {e}")
             return None
 
     def _analyze_page(self, page, url: str) -> Optional[str]:
@@ -136,30 +131,28 @@ class SitekeyDetector:
 
         page.on('request', handle_request)
 
-        page.goto(url, wait_until='domcontentloaded', timeout=30000)
-        page.wait_for_timeout(3000)
+        page.goto(url, wait_until='domcontentloaded', timeout=self._browser.PAGE_GOTO_TIMEOUT_MS)
+        page.wait_for_timeout(self._browser.PAGE_SETTLE_WAIT_MS)
 
-        # Try DOM extraction
-        for attempt in range(10):
-            sitekey = page.evaluate('''() => {
-                const cfDiv = document.querySelector('[data-sitekey]');
+        for attempt in range(self._browser.DOM_EXTRACTION_MAX_ATTEMPTS):
+            sitekey = page.evaluate(f'''() => {{
+                const cfDiv = document.querySelector('{self._cf.SITEKEY_ATTR_SELECTOR}');
                 if (cfDiv) return cfDiv.getAttribute('data-sitekey');
 
-                const iframes = document.querySelectorAll('iframe[src*="challenges.cloudflare.com"]');
-                for (const iframe of iframes) {
+                const iframes = document.querySelectorAll('iframe[src*="{self._cf.CHALLENGE_DOMAIN}"]');
+                for (const iframe of iframes) {{
                     const match = iframe.src.match(/sitekey=([a-zA-Z0-9_-]+)/);
                     if (match) return match[1];
-                }
+                }}
 
                 return null;
-            }''')
+            }}''')
 
             if sitekey and self._is_valid_sitekey(sitekey):
                 return sitekey
 
-            page.wait_for_timeout(5000)
+            page.wait_for_timeout(self._browser.DOM_RETRY_WAIT_MS)
 
-        # Analyze JS bundles
         return self._analyze_js_bundles(page, js_bundles)
 
     def _analyze_js_bundles(self, page, js_bundles: List[str]) -> Optional[str]:
@@ -202,10 +195,11 @@ class SitekeyDetector:
 
     def _is_valid_sitekey(self, key: str) -> bool:
         """Validate sitekey format."""
-        if not key or len(key) < 20:
+        if not key or len(key) < self._sitekey.MIN_LENGTH:
             return False
-        if key.lower() in self.FALSE_POSITIVES:
+        if key.lower() in self._sitekey.FALSE_POSITIVES:
             return False
-        if not (key.startswith('0x4') or (len(key) > 25 and any(c.isdigit() for c in key))):
+        if not (key.startswith(self._cf.SITEKEY_PREFIX) or
+                (len(key) > self._sitekey.CF_FORMAT_MIN_LENGTH and any(c.isdigit() for c in key))):
             return False
         return True

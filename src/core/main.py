@@ -6,6 +6,8 @@ Main entry point for the Alap-Alap captcha solver.
 
 import time
 from typing import Optional
+from loguru import logger
+
 from ..detector import SitekeyDetector
 from ..solver import CaptchaSolver
 
@@ -19,10 +21,10 @@ class AlapAlap:
     fingerprint resistance.
 
     Usage:
-        >>> from alap_alap import AlapAlap
+        >>> from src.core import AlapAlap
         >>> with AlapAlap() as alap:
-        ...     token = alap.solve("https://example.com/login")
-        ...     print(token)
+        ...     result = alap.solve("https://example.com/login")
+        ...     print(result)
     """
 
     def __init__(self, proxy: Optional[str] = None, headless: bool = True):
@@ -56,13 +58,13 @@ class AlapAlap:
             invisible: Use invisible mode (default: True)
 
         Returns:
-            dict with 'success', 'token', 'sitekey', 'time' keys
+            dict with 'success', 'token', 'sitekey', 'error', 'time' keys
         """
         start_time = time.time()
 
-        # Step 1: Detect sitekey
         sitekey = self.detector.detect(url)
         if not sitekey:
+            logger.warning(f"No sitekey found for {url}")
             return {
                 "success": False,
                 "token": None,
@@ -71,16 +73,28 @@ class AlapAlap:
                 "time": time.time() - start_time
             }
 
-        # Step 2: Solve captcha
+        logger.info(f"Solving captcha for {url}")
         token = self.solver.solve(url, sitekey, invisible)
+        elapsed = time.time() - start_time
 
-        return {
-            "success": token != "failed" and token is not None,
-            "token": token,
-            "sitekey": sitekey,
-            "error": None if token and token != "failed" else "Solver failed",
-            "time": time.time() - start_time
-        }
+        if token:
+            logger.success(f"Solved in {elapsed:.1f}s")
+            return {
+                "success": True,
+                "token": token,
+                "sitekey": sitekey,
+                "error": None,
+                "time": elapsed
+            }
+        else:
+            logger.error(f"Solver failed for {url}")
+            return {
+                "success": False,
+                "token": None,
+                "sitekey": sitekey,
+                "error": "Solver failed",
+                "time": elapsed
+            }
 
     def solve_with_sitekey(self, url: str, sitekey: str, invisible: bool = True) -> dict:
         """
@@ -92,16 +106,29 @@ class AlapAlap:
             invisible: Use invisible mode (default: True)
 
         Returns:
-            dict with 'success', 'token', 'time' keys
+            dict with 'success', 'token', 'error', 'time' keys
         """
         start_time = time.time()
 
+        logger.info(f"Solving captcha for {url} with sitekey {sitekey[:20]}...")
         token = self.solver.solve(url, sitekey, invisible)
+        elapsed = time.time() - start_time
 
-        return {
-            "success": token != "failed" and token is not None,
-            "token": token,
-            "sitekey": sitekey,
-            "error": None if token and token != "failed" else "Solver failed",
-            "time": time.time() - start_time
-        }
+        if token:
+            logger.success(f"Solved in {elapsed:.1f}s")
+            return {
+                "success": True,
+                "token": token,
+                "sitekey": sitekey,
+                "error": None,
+                "time": elapsed
+            }
+        else:
+            logger.error(f"Solver failed for {url}")
+            return {
+                "success": False,
+                "token": None,
+                "sitekey": sitekey,
+                "error": "Solver failed",
+                "time": elapsed
+            }

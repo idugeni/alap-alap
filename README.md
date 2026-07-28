@@ -1,49 +1,146 @@
-# Alap-Alap
-
 <div align="center">
 
-🦅 **Cloudflare Turnstile Captcha Solver**
+# 🦅 Alap-Alap
 
-*Like a falcon - fast, precise, and unstoppable*
+### Cloudflare Turnstile Captcha Solver
 
-[![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)](https://python.org)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Camoufox](https://img.shields.io/badge/Browser-Camoufox-orange.svg)](https://camoufox.com)
+*Like a falcon — fast, precise, and unstoppable*
+
+[![Python](https://img.shields.io/badge/Python-3.8+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![License](https://img.shields.io/badge/License-MIT-00FF00?style=for-the-badge)](LICENSE)
+[![Camoufox](https://img.shields.io/badge/Browser-Camoufox-FF6B00?style=for-the-badge&logo=firefox&logoColor=white)](https://camoufox.com)
+[![Tests](https://img.shields.io/badge/Tests-15%20Passed-brightgreen?style=for-the-badge)](#testing)
+[![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge)]()
+
+<br>
+
+[Features](#features) • [Installation](#installation) • [Usage](#usage) • [API](#api-reference) • [Testing](#testing)
 
 </div>
 
 ---
 
-## Features
+## ✨ Features
 
-- 🦅 **Fast Detection** - Automatic sitekey detection from URLs
-- 🛡️ **Anti-Fingerprint** - Uses Camoufox to avoid bot detection
-- 🎯 **High Success Rate** - Intelligent mouse movement and timing
-- 🔧 **Easy to Use** - Simple API, just provide URL
-- 🌐 **REST API** - Built-in Flask server
+<table>
+<tr>
+<td>
 
-## Installation
+🔍 **Auto Detection** — Automatic sitekey extraction from URLs
+
+</td>
+<td>
+
+🛡️ **Anti-Fingerprint** — Camoufox browser protection
+
+</td>
+</tr>
+<tr>
+<td>
+
+🎯 **High Accuracy** — Smart mouse movement simulation
+
+</td>
+<td>
+
+⚡ **Fast** — Optimized solving pipeline
+
+</td>
+</tr>
+<tr>
+<td>
+
+🧩 **Modular** — Clean, separated components
+
+</td>
+<td>
+
+📝 **Smart Logging** — JSON results with timestamps
+
+</td>
+</tr>
+<tr>
+<td>
+
+⚙️ **Configurable** — All settings in one place
+
+</td>
+<td>
+
+🎨 **Rich CLI** — Beautiful terminal output
+
+</td>
+</tr>
+</table>
+
+---
+
+## 📦 Installation
+
+### Option 1: Auto Setup (Recommended)
 
 ```bash
-# Clone the repository
+# Clone
 git clone https://github.com/your-username/alap-alap.git
 cd alap-alap
 
-# Install dependencies
-pip install -e .
+# Run setup (creates .venv + installs everything)
+setup.bat
 
-# Install Camoufox browser
-camoufox fetch
+# Or just run - auto-installs if missing
+run.bat https://example.com/login
 ```
 
-## Quick Start
+### Option 2: Manual Setup
+
+```bash
+# Create virtual environment
+python -m venv .venv
+.venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install browsers
+camoufox fetch
+playwright install chromium
+```
+
+---
+
+## 🚀 Usage
+
+### CLI Commands
+
+```bash
+# Show help
+python main.py --help
+
+# Solve captcha (auto-detect sitekey)
+python main.py solve https://example.com/login
+
+# Detect sitekey only
+python main.py detect https://example.com/login
+
+# Solve with known sitekey
+python main.py solve https://example.com/login --sitekey 0x4AAAAAAAQV1p8gT2jN3m4
+
+# Solve with proxy
+python main.py solve https://example.com/login --proxy user:pass@host:port
+
+# Check dependencies
+python main.py health
+
+# Show project info
+python main.py info
+```
 
 ### Python API
 
 ```python
-from alap_alap import AlapAlap
+from src.core import AlapAlap
 
-# Using context manager
+# Auto-detect sitekey and solve
 with AlapAlap() as alap:
     result = alap.solve("https://example.com/login")
     
@@ -53,52 +150,249 @@ with AlapAlap() as alap:
         print(f"Time: {result['time']:.1f}s")
 ```
 
-### REST API
+### Detect Sitekey Only
 
-```bash
-# Start the server
-python -m alap_alap.api.server
+```python
+from src.detector import SitekeyDetector
 
-# Solve captcha
-curl -X POST http://localhost:5000/solve \
-  -H "Content-Type: application/json" \
-  -d '{"url": "https://example.com/login", "invisible": true}'
+detector = SitekeyDetector()
+sitekey = detector.detect("https://example.com/login")
+
+if sitekey:
+    print(f"Found: {sitekey}")
 ```
 
-## API Reference
+---
+
+## 📋 CLI Reference
+
+| Command | Description |
+|---------|-------------|
+| `python main.py solve <url>` | Solve captcha (auto-detect sitekey) |
+| `python main.py detect <url>` | Detect sitekey only |
+| `python main.py health` | Check dependencies status |
+| `python main.py info` | Show project information |
+
+### Solve Options
+
+| Option | Description |
+|--------|-------------|
+| `--sitekey, -s` | Use known sitekey |
+| `--proxy, -p` | Use proxy (`user:pass@host:port`) |
+| `--visible, -v` | Use visible browser mode |
+| `--output, -o` | Output file (default: `results.txt`) |
+
+---
+
+## 🔌 API Reference
 
 ### `AlapAlap`
 
-Main class for captcha solving.
+Main solver class.
 
 ```python
 AlapAlap(proxy=None, headless=True)
 ```
 
-**Methods:**
-- `solve(url, invisible=True)` - Solve captcha and return result dict
-- `solve_with_sitekey(url, sitekey, invisible=True)` - Solve with known sitekey
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `proxy` | `str` | `None` | Proxy string (`user:pass@host:port`) |
+| `headless` | `bool` | `True` | Run browser headless |
 
-## Response Format
+**Methods:**
+
+```python
+# Auto-detect sitekey and solve
+result = alap.solve(url, invisible=True)
+
+# Solve with known sitekey
+result = alap.solve_with_sitekey(url, sitekey, invisible=True)
+```
+
+### `SitekeyDetector`
+
+Sitekey detection class.
+
+```python
+from src.detector import SitekeyDetector
+
+detector = SitekeyDetector(proxy=None)
+sitekey = detector.detect(url)
+```
+
+### `CaptchaSolver`
+
+Low-level solver class.
+
+```python
+from src.solver import CaptchaSolver
+
+solver = CaptchaSolver(proxy=None, headless=True)
+solver.start()
+token = solver.solve(url, sitekey, invisible=True)
+solver.stop()
+```
+
+### `config`
+
+Centralized configuration.
+
+```python
+from src.config import config
+
+# Access configuration
+print(config.browser.USER_AGENT)
+print(config.mouse.MOVE_THRESHOLD_PX)
+print(config.solver.INVISIBLE_SOLVE_MAX_ATTEMPTS)
+```
+
+---
+
+## 📄 Response Format
+
+### CLI Output (`results.txt`)
 
 ```json
 {
-    "status": "success",
+  "url": "https://example.com/login",
+  "sitekey": "0x4AAAAAAA...",
+  "token": "0.your-captcha-token...",
+  "status": "success",
+  "error": null,
+  "timestamp": "2026-07-28T15:00:00+00:00"
+}
+```
+
+### Status Values
+
+| Status | Description |
+|--------|-------------|
+| `success` | Sitekey + token retrieved |
+| `sitekey_only` | Only sitekey detected |
+| `failed` | Solve failed (check `error`) |
+| `no_sitekey` | Sitekey not found |
+
+### Python Response
+
+```python
+{
+    "success": True,
     "token": "0.your-captcha-token...",
     "sitekey": "0x4AAAAAAA...",
+    "error": None,
     "time": 2.5
 }
 ```
 
-## Requirements
+---
+
+## 📁 Project Structure
+
+```
+alap-alap/
+├── main.py                 # CLI entry point
+├── setup.bat               # Auto setup script
+├── run.bat                 # Auto run script
+├── src/
+│   ├── __init__.py
+│   ├── config.py           # Centralized configuration
+│   ├── core/               # AlapAlap main class
+│   │   ├── __init__.py
+│   │   └── main.py
+│   ├── detector/           # Sitekey detection
+│   │   ├── __init__.py
+│   │   └── sitekey_detector.py
+│   └── solver/             # Captcha solving
+│       ├── __init__.py
+│       └── captcha_solver.py
+├── tests/                  # Test suite
+│   ├── unit/
+│   └── integration/
+├── requirements.txt
+└── pyproject.toml
+```
+
+---
+
+## ⚙️ Configuration
+
+All settings are centralized in `src/config.py`:
+
+```python
+from src.config import config
+
+# Browser settings
+config.browser.USER_AGENT        # Chrome user agent
+config.browser.HTTP_TIMEOUT      # HTTP request timeout
+config.browser.PAGE_GOTO_TIMEOUT_MS  # Page load timeout
+
+# Mouse movement settings
+config.mouse.MOVE_THRESHOLD_PX   # Movement threshold
+config.mouse.SPEED_FACTOR        # Speed calculation factor
+
+# Solver settings
+config.solver.INVISIBLE_SOLVE_MAX_ATTEMPTS  # Max attempts
+config.solver.IFRAME_WAIT_MAX_ATTEMPTS      # Iframe wait
+
+# Sitekey validation
+config.sitekey.MIN_LENGTH        # Minimum sitekey length
+config.sitekey.FALSE_POSITIVES   # Invalid sitekey list
+```
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+python -m pytest tests/ -v
+
+# Run unit tests only
+python -m pytest tests/unit/ -v
+
+# Run integration tests
+python -m pytest tests/integration/ -v
+
+# Run with coverage
+python -m pytest tests/ --cov=src
+```
+
+---
+
+## 🛠️ Development
+
+```bash
+# Install dev dependencies
+pip install -e ".[dev]"
+
+# Format code
+black src/ tests/
+
+# Lint code
+ruff check src/ tests/
+
+# Type check
+mypy src/
+```
+
+---
+
+## 📋 Requirements
 
 - Python 3.8+
 - Camoufox
 - Playwright
+- Requests
+- Rich
+- Typer
+- Loguru
+- Pydantic
 
-## License
+---
 
-MIT License - see [LICENSE](LICENSE) for details.
+## 📄 License
+
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
@@ -107,5 +401,7 @@ MIT License - see [LICENSE](LICENSE) for details.
 **Built with 🦅 by Alap-Alap Team**
 
 *Fast as a falcon, smart as a hunter*
+
+[![GitHub](https://img.shields.io/badge/GitHub-alap--alap-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/your-username/alap-alap)
 
 </div>

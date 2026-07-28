@@ -1,7 +1,5 @@
 """Unit tests for SitekeyDetector."""
 
-import pytest
-from unittest.mock import Mock, patch, MagicMock
 from src.detector import SitekeyDetector
 
 
