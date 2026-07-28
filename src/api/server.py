@@ -4,8 +4,7 @@ Alap-Alap REST API Server
 Flask-based REST API for the captcha solver.
 """
 
-import time
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request
 from loguru import logger
 
 
