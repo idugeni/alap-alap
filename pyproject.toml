@@ -1,6 +1,10 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "alap-alap"
-version = "1.0.0"
+version = "1.2.0"
 description = "Cloudflare Turnstile Captcha Solver with Camoufox"
 readme = "README.md"
 license = "MIT"
@@ -26,10 +30,17 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-cov",
-    "black",
+    "black==26.5.1",
     "ruff",
     "pyright",
 ]
+
+[project.scripts]
+alap-alap = "src.cli:app"
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+namespaces = false
 
 [tool.black]
 line-length = 100
@@ -42,14 +53,46 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM"]
 
+[tool.ruff.lint.flake8-bugbear]
+# Typer's whole API is "call in the default argument", so B008 does not apply.
+extend-immutable-calls = ["typer.Argument", "typer.Option"]
+
 [tool.pyright]
 pythonVersion = "3.10"
-typeCheckingMode = "off"
+typeCheckingMode = "basic"
 reportMissingImports = false
 reportMissingTypeStubs = false
+reportMissingModuleSource = false
+# Third-party call sites (Playwright page objects, Camoufox kwargs) are
+# intentionally untyped; keep the gate on our own logic errors.
+reportUnknownMemberType = false
+reportUnknownArgumentType = false
+reportUnknownVariableType = false
+reportUnknownParameterType = false
+reportPrivateUsage = false
+reportUnusedExpression = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+# Integration tests launch a real Camoufox browser, so they are opt-in:
+#   pytest -m integration
+addopts = "--strict-markers -m 'not integration'"
+markers = [
+    "integration: end-to-end tests that start a real browser (deselected by default)",
+    "slow: tests that take more than a second",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/__pycache__/*", "*/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

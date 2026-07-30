@@ -1,47 +1,104 @@
-# Python
+# Python bytecode and native build output
 __pycache__/
 *.py[cod]
 *$py.class
-*.egg-info/
+*.pyd
+*.so
+
+# Python packaging
 *.egg
-dist/
-build/
+*.egg-info/
 .eggs/
+build/
+dist/
+wheelhouse/
+pip-wheel-metadata/
+*.whl
 
-# Virtual environments
-.env
+# Virtual environments and environment files
 .venv/
-env/
 venv/
+env/
+.direnv/
+.env
+.env.*
+!.env.example
+!.env.sample
 
-# IDE
+# Local credentials and private key containers
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Test, coverage, and quality-tool output
+.pytest_cache/
+.tox/
+.nox/
+.hypothesis/
+.coverage
+.coverage.*
+coverage.xml
+coverage.json
+htmlcov/
+junit*.xml
+pytestdebug.log
+.mypy_cache/
+.pyright/
+.pyre/
+.pytype/
+.ruff_cache/
+
+# Browser-test artifacts
+playwright-report/
+blob-report/
+test-results/
+traces/
+
+# IDE and editor state
 .idea/
 .vscode/
+.history/
 *.swp
 *.swo
+*.tmp
+*.bak
+*.orig
+*~
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-
-# mypy
-.mypy_cache/
-
-# OS
+# Operating-system metadata
 .DS_Store
 Thumbs.db
+Desktop.ini
 
-# Project specific
+# Project runtime data
 test_direct.py
 test_solve_direct.py
 results.txt
 captcha_database.json
+captcha_database.corrupt-*.json
+.captcha_database.json.*.tmp
+realtest_db.json
+realtest_results.txt
 
-# Tools
-.mimocode/
-.serena/
+# Generated sitekey exports
+SITEKEYS.md
+sitekeys.csv
+sitekeys.json
 
-# Logs
+# Local configuration overrides
+alap-alap.yml
+alap-alap.yaml
+.alap-alap.yml
+alap-alap.local.yml
+alap-alap.local.yaml
+
+# Logs (LOG_DIR can be configured outside the default logs/ directory)
 logs/
+*.log
+*.log.*
+
+# Local development-tool state
+.mimocode/
+.mimocode-project-id
+.serena/

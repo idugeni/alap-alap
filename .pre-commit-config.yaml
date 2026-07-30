@@ -1,0 +1,45 @@
+# Mirrors the CI gates so a formatting slip never reaches a pull request.
+#
+#   pip install pre-commit
+#   pre-commit install
+#   pre-commit run --all-files
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.21
+    hooks:
+      - id: ruff
+        name: ruff (lint)
+        args: [--fix]
+        files: ^(src/|tests/|main\.py)
+      - id: ruff-format
+        name: ruff (format check only, black is authoritative)
+        stages: [manual]
+
+  - repo: https://github.com/psf/black
+    rev: 26.5.1
+    hooks:
+      - id: black
+        files: ^(src/|tests/|main\.py)
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=512]
+      - id: detect-private-key
+
+  - repo: local
+    hooks:
+      # Integration tests launch a browser, so only the unit suite runs here.
+      - id: pytest-unit
+        name: pytest (unit)
+        entry: python -m pytest tests/unit -q
+        language: system
+        pass_filenames: false
+        types: [python]

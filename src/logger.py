@@ -32,17 +32,20 @@ def setup_logger():
         colorize=True,
     )
 
-    # File handler with rotation
+    # File handler with rotation.
+    # LOG_ROTATION wins when set; LOG_MAX_SIZE_MB is the simpler shorthand.
     log_path = log_dir / cfg.LOG_FILE
-    rotation_size = f"{cfg.LOG_MAX_SIZE_MB} MB"
+    rotation = cfg.LOG_ROTATION or f"{cfg.LOG_MAX_SIZE_MB} MB"
     logger.add(
         str(log_path),
         format=cfg.LOG_FORMAT,
-        level="DEBUG",
-        rotation=rotation_size,
+        level=cfg.LOG_FILE_LEVEL,
+        rotation=rotation,
         retention=cfg.LOG_BACKUP_COUNT,
         compression=cfg.LOG_COMPRESSION,
         encoding="utf-8",
+        # Newline-delimited JSON for log shippers, when asked for.
+        serialize=cfg.LOG_JSON,
     )
 
     # Clean old logs on startup

@@ -5,11 +5,14 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  # Lets the browser-backed integration job be triggered by hand.
+  workflow_dispatch:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ['3.10', '3.11', '3.12']
 
@@ -20,6 +23,77 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        cache: pip
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e ".[dev]"
+
+    - name: Lint with ruff
+      run: |
+        ruff check src/ tests/ main.py
+
+    - name: Format check with black
+      run: |
+        black --check src/ tests/ main.py
+
+    - name: Type check with pyright
+      run: |
+        pyright src/
+
+    # Unit tests do not need a browser; the integration suite is deselected by
+    # the `-m 'not integration'` default in pyproject.toml.
+    - name: Test with pytest
+      run: |
+        pytest --cov=src --cov-report=xml --cov-report=term-missing tests/
+
+    - name: Verify the console script is installed
+      run: |
+        alap-alap --help
+        alap-alap config --json --section solver
+        python main.py info
+
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./coverage.xml
+        flags: unittests
+        name: codecov-${{ matrix.python-version }}
+      continue-on-error: true
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Build the distribution
+      run: |
+        python -m pip install --upgrade pip build
+        python -m build
+
+    - name: Check the artifacts
+      run: |
+        python -m pip install twine
+        twine check dist/*
+
+  integration:
+    # Opt-in: launches a real Camoufox browser, so it is kept off the
+    # per-commit path and out of the required checks.
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
 
     - name: Install dependencies
       run: |
@@ -29,25 +103,6 @@ jobs:
     - name: Install Camoufox
       run: camoufox fetch
 
-    - name: Lint with ruff
+    - name: Run integration tests
       run: |
-        ruff check src/ tests/
-
-    - name: Format check with black
-      run: |
-        black --check src/ tests/
-
-    - name: Type check with pyright
-      run: |
-        pyright src/
-
-    - name: Test with pytest
-      run: |
-        pytest --cov=src tests/
-
-    - name: Upload coverage
-      uses: codecov/codecov-action@v3
-      with:
-        files: ./coverage.xml
-        flags: unittests
-        name: codecov-${{ matrix.python-version }}
+        pytest -m integration tests/ -v

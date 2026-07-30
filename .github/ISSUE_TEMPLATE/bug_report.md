@@ -1,37 +1,62 @@
 ---
 name: Bug Report
-about: Report a bug to help us improve
+about: Report reproducible incorrect behavior
 title: '[BUG] '
 labels: bug
 assignees: ''
 ---
 
-## Describe the Bug
+## Summary
 
-A clear and concise description of what the bug is.
+Describe the incorrect behavior clearly and concisely.
 
-## To Reproduce
+## Minimal reproduction
 
-Steps to reproduce the behavior:
+Provide the smallest command or code sample that reproduces the problem:
 
-1. 
-2. 
-3. 
+```text
+python main.py ...
+```
 
-## Expected Behavior
+Steps:
 
-A clear and concise description of what you expected to happen.
+1.
+2.
+3.
 
-## Screenshots
+## Expected behavior
 
-If applicable, add screenshots to help explain your problem.
+What should have happened?
+
+## Actual behavior
+
+What happened instead? Include the exit code, HTTP status, or result fields when relevant.
 
 ## Environment
 
-- OS: [e.g., Windows 11, Ubuntu 22.04]
-- Python Version: [e.g., 3.11.0]
-- Alap-Alap Version: [e.g., 1.0.0]
+- Operating system:
+- Python version (`python --version`):
+- Alap-Alap version (`python main.py info` or installed package version):
+- Entry point (`python main.py`, `alap-alap`, Python API, or REST API):
+- Headless or visible mode:
+- Proxy scheme, if used (do not include credentials):
+- Config source (defaults, YAML, or environment overrides):
 
-## Additional Context
+## Diagnostics
 
-Add any other context about the problem here.
+- [ ] `python main.py health` output included
+- [ ] Relevant traceback or redacted log excerpt included
+- [ ] The issue reproduces with a controlled test target
+- [ ] Integration/browser details included when applicable
+
+```text
+Paste redacted diagnostics here.
+```
+
+## Security and privacy
+
+Do not post CAPTCHA tokens, API keys, passwords, proxy credentials, private URLs, database contents, account information, or unredacted logs. Replace sensitive values with placeholders.
+
+## Additional context
+
+Add any other information that helps isolate the problem.

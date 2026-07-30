@@ -1,30 +1,49 @@
-## Description
+## Summary
 
-Brief description of the changes
+Describe the problem and the resulting behavior. Keep the pull request focused on one concern.
 
-## Type of Change
+## Type of change
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-- [ ] Refactoring (no functional changes)
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Refactor with no intended behavior change
+- [ ] Documentation
+- [ ] Security hardening
+- [ ] Build, CI, or dependency maintenance
+- [ ] Breaking change
 
-## Testing
+## Compatibility and security
 
-- [ ] Tests pass locally
-- [ ] Added tests for new functionality
-- [ ] Updated documentation
+- Breaking behavior or migration steps:
+- Security impact and safe default:
+- Changes to CLI options, Python interfaces, REST requests/responses, or config:
 
-## Checklist
+Use `N/A` where a section does not apply. Do not include credentials, proxy passwords, API keys, CAPTCHA tokens, private URLs, or account data.
 
-- [ ] My code follows the project's style guidelines
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] Any dependent changes have been merged and published
+## Validation
 
-## Screenshots (if applicable)
+List the exact commands and relevant results:
 
-Add screenshots to help explain your changes
+```text
+ruff check src/ tests/ main.py
+black --check src/ tests/ main.py
+pyright src/
+python -m pytest tests/
+```
+
+- [ ] Non-integration tests pass locally
+- [ ] New or changed behavior has focused tests, or the reason tests are not applicable is documented
+- [ ] `pytest -m integration` was run when real-browser behavior changed, or the reason it was not run is documented
+- [ ] `git diff --check` passes
+
+## Documentation and repository hygiene
+
+- [ ] README/API/config examples match the implementation
+- [ ] User-visible changes are recorded under `Unreleased` in `CHANGELOG.md`
+- [ ] No generated output, caches, logs, local databases, exports, virtual environments, or tool state are included
+- [ ] No secrets or full tokens appear in the diff
+- [ ] I reviewed the complete diff and removed unrelated changes
+
+## Additional context
+
+Add logs, screenshots, benchmarks, or follow-up work only when useful. Redact sensitive values and include a reproducible command/environment for performance claims.
