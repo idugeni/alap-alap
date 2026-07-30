@@ -8,7 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
-- Synchronized README, contribution guidance, and GitHub templates with the current CLI, Python API, REST API, configuration model, security defaults, browser pool, test workflow, and repository layout.
+- Re-audited README, contribution guidance, and GitHub templates against the current codebase, documenting setup limitations, CLI options, single/batch result shapes, REST contracts and operational caveats, submit-triggered job-retention cleanup, result-output path behavior, configuration, security defaults, browser pooling, test workflow, and repository layout.
 - Pinned the development and pre-commit Black formatter to the same version so local hooks and CI produce identical output.
 - Removed static test, coverage, and benchmark claims from user-facing documentation when they were not tied to a reproducible environment.
 - Expanded `.gitignore` for environment secrets, packaging output, parallel coverage, quality-tool caches, browser-test reports, atomic database temp files, logs, and local tool state.

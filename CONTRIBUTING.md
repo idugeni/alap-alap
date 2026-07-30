@@ -71,7 +71,7 @@ alap-alap/
 │   ├── security.py             # SSRF, authentication, rate limiting
 │   └── sitekeys_db.py          # Atomic persistence and exports
 ├── tests/
-│   ├── unit/                   # No real browser or third-party dependency
+│   ├── unit/                   # Browser-free unit tests
 │   └── integration/            # Opt-in Camoufox tests
 ├── main.py                     # Entry-point shim
 ├── pyproject.toml              # Package and tool configuration

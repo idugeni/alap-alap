@@ -44,7 +44,7 @@ Set-Location alap-alap
 .\run.bat solve https://example.com/login
 ```
 
-`setup.bat` creates `.venv`, installs `requirements.txt`, fetches Camoufox, and installs Playwright Chromium. `run.bat` forwards all remaining arguments to `python main.py`.
+`setup.bat` creates `.venv`, installs `requirements.txt`, and attempts to run `camoufox fetch` and `playwright install chromium`. Browser-command output is suppressed and the script does not fail when either command fails, so rerun the commands under Manual installation without suppression if browser setup is in doubt. `run.bat` forwards all remaining arguments to `python main.py`.
 
 ### Manual installation
 
@@ -81,7 +81,7 @@ alap-alap --help
 python main.py --help
 ```
 
-Use `python main.py setup --check-only` to report missing runtime packages without installing anything. Running `setup` without `--check-only` installs missing packages and fetches Camoufox.
+The CLI `setup` command is a lightweight package-discovery check, not a complete browser-artifact check. It uses Python module discovery for `requests`, `camoufox`, and `playwright`; it does not import those packages to prove they work. `python main.py setup --check-only` reports a module that cannot be found without installing anything. Without `--check-only`, a missing module causes `requirements.txt` to be installed. The command then attempts `camoufox fetch` only when `camoufox` or `playwright` was initially missing; a failed fetch produces a warning but does not make the command fail. It neither verifies existing Camoufox files nor installs Playwright Chromium. Run the browser commands above explicitly and check their exit status.
 
 ## Command-line interface
 
@@ -136,10 +136,10 @@ On PowerShell, place a multiline command on one line or replace Bash's `\` conti
 | `batch <file>` | Solve one URL per line with parallel browser workers; `-` reads stdin. |
 | `detect <url>` | Detect a sitekey and report the layer that found it. |
 | `sitekeys <action> [query]` | Run `list`, `search`, `export`, `stats`, or `prune`. |
-| `health` | Check Python packages, Chromium, logs, database, and config discovery. |
+| `health` | Check discovery of selected Python modules, Playwright Chromium, logs, database, and config. |
 | `info` | Show package, Python, logging, and database information. |
 | `config` | Show effective settings and corresponding environment variables. |
-| `setup` | Install missing runtime dependencies and browser files. |
+| `setup` | Check or install three discoverable browser-stack Python modules and conditionally attempt a Camoufox fetch. |
 | `server` | Start the Flask development server. |
 
 ### Solve options
@@ -149,11 +149,11 @@ On PowerShell, place a multiline command on one line or replace Bash's `\` conti
 | `--sitekey`, `-s` | Use a known sitekey instead of running detection. |
 | `--proxy`, `-p` | Proxy URL or `user:pass@host:port`. |
 | `--visible`, `-v` | Show the browser and use the visible-widget flow. |
-| `--retries`, `-r` | Total attempts; values below one are normalized to one and config caps the maximum. |
-| `--timeout`, `-t` | Per-attempt wall-clock budget in seconds. |
-| `--output`, `-o` | JSONL destination, default `results.txt`. |
-| `--json` | Also print the result object as JSON. |
-| `--no-install` | Fail rather than installing missing browser dependencies. |
+| `--retries`, `-r` | Total attempts; values below one are normalized to one and config caps the maximum. Default: `1`. |
+| `--timeout`, `-t` | Per-attempt wall-clock budget in seconds; the solver config is used when omitted. |
+| `--output`, `-o` | JSONL destination. Default: `results.txt`. |
+| `--json` | Also print the raw result object, including `url`, as JSON. |
+| `--no-install` | Fail when a checked Python module cannot be discovered instead of installing dependencies. |
 
 ### Batch input and options
 
@@ -161,14 +161,50 @@ The URL file contains one URL per line. Empty lines and lines beginning with `#`
 
 | Option | Meaning |
 |---|---|
-| `--workers`, `-w` | Browser workers; defaults to `batch.MAX_WORKERS` and is capped by `batch.WORKER_LIMIT`. |
+| `--workers`, `-w` | Browser workers; defaults to `batch.MAX_WORKERS` and is capped by `batch.WORKER_LIMIT` and the URL count. |
 | `--proxy`, `-p` | One proxy for every worker. |
-| `--proxy-file` | Proxy pool; overrides `--proxy`. |
+| `--proxy-file` | Proxy pool assigned to workers round-robin; overrides `--proxy`. |
 | `--visible`, `-v` | Use visible browsers. |
-| `--retries`, `-r` | Attempts per URL. |
-| `--timeout`, `-t` | Per-attempt deadline. |
-| `--output`, `-o` | JSONL destination. |
-| `--no-install` | Do not auto-install missing dependencies. |
+| `--retries`, `-r` | Attempts per URL; values below one are normalized to one and `retry.MAX_RETRIES` caps the maximum. Default: `1`. |
+| `--timeout`, `-t` | Per-attempt deadline; the solver config is used when omitted. |
+| `--output`, `-o` | JSONL destination. Default: `results.txt`. |
+| `--no-install` | Fail when a checked Python module cannot be discovered instead of installing dependencies. |
+
+### Detect options
+
+`detect` writes a `sitekey_only` or `no_sitekey` record to the result file. A found sitekey is also added to the local database with `unknown` status.
+
+| Option | Meaning |
+|---|---|
+| `--proxy`, `-p` | Proxy used by HTTP and browser detection. |
+| `--output`, `-o` | JSONL destination. Default: `results.txt`. |
+| `--no-install` | Fail when a checked Python module cannot be discovered instead of installing dependencies. |
+
+### Sitekey database options
+
+| Argument or option | Meaning |
+|---|---|
+| `list` | List every entry; `--status active|inactive|unknown` filters the table. |
+| `search <query>` | Search sitekey, URL, domain, platform, and tags. `--query`, `-q` is also accepted. |
+| `export` | Export with `--format`, `-f` set to `markdown`/`md`, `csv`, or `json`; optional `--output`, `-o` overrides the generated filename. |
+| `stats` | Show database totals, solve counts/rate, average solve time, and fresh-token count. |
+| `prune` | Remove entries selected by `--days <n>`, `--failed`, or both. At least one selector is required. |
+
+Default export names are `SITEKEYS.md`, `sitekeys.csv`, and `sitekeys.json`.
+
+### Inspection, setup, and server options
+
+| Command | Options and behavior |
+|---|---|
+| `health` | Has no command-specific options. Uses module discovery for eight dependency rows, then separately imports Playwright and starts `sync_playwright()` to inspect the Chromium executable path. It also reports log statistics, database entry count, and config discovery, but does not verify Camoufox browser files. |
+| `info` | Has no command-specific options. Shows version, Python, license, log statistics, and database solve statistics. |
+| `config` | `--json` emits JSON; `--section`, `-s` selects one config section and rejects unknown names. |
+| `setup` | `--check-only` prevents installation. The package/browser limitations described under Installation still apply. |
+| `server` | `--host`, `-h`; `--port`, `-p`; and `--debug`, `-d`. Host and port fall back to `api.HOST` and `api.PORT`. |
+
+### Result output path
+
+`solve`, `batch`, and `detect` always pass their `--output` value to the writer, and each command currently defaults that option to `results.txt`. Changing `storage.RESULTS_FILE` does not change those CLI defaults; pass `--output <path>` explicitly. `storage.RESULTS_FILE` remains the fallback used by the internal result writer when no path is supplied.
 
 ## Python API
 
@@ -237,12 +273,26 @@ with SitekeyDetector(allow_private_hosts=False) as detector:
 print(sitekey, method)  # method: url, html, dom, or js_bundle
 ```
 
-### Result contract
+### Result contracts
 
-`solve()`, `solve_with_sitekey()`, and each batch item use the same fields:
+`solve()` and `solve_with_sitekey()` return the standard solve fields:
 
 ```json
 {
+  "success": true,
+  "token": "0.example-token",
+  "sitekey": "0x4AAAAAAA...",
+  "error": null,
+  "time": 2.5,
+  "attempts": 1
+}
+```
+
+Each `solve_many()` and `solve_batch()` item is the same shape plus the input `url`:
+
+```json
+{
+  "url": "https://example.com/login",
   "success": true,
   "token": "0.example-token",
   "sitekey": "0x4AAAAAAA...",
@@ -276,11 +326,11 @@ The server binds to loopback by default. If `ALAP_API_KEY` is set, every endpoin
 | `GET` | `/sitekeys` | Protected when configured | Filter stored keys by `status`, `domain`, `q`, and `limit`. |
 | `GET` | `/stats` | Protected when configured | Database and browser-pool statistics. |
 
-Authentication is disabled when `api.KEY` is empty, which is convenient for loopback development. Do not expose an unauthenticated server to a network.
+Authentication is disabled when `api.KEY` is empty, which is convenient for loopback development. Do not expose an unauthenticated server to a network. Protected endpoints are also subject to a sliding-window limit keyed by the direct socket peer. The limiter is in-process, ignores forwarding headers such as `X-Forwarded-For`, and is not shared across WSGI workers; account for those properties when placing the app behind a proxy or running multiple workers. Every response receives an `X-Request-ID` header.
 
 ### Solve request
 
-`POST /solve` and `POST /jobs` accept:
+`POST /solve` and `POST /jobs` accept the same schema-validated JSON object:
 
 ```json
 {
@@ -293,7 +343,16 @@ Authentication is disabled when `api.KEY` is empty, which is convenient for loop
 }
 ```
 
-Only `url` is required. Unknown fields are rejected. REST requests allow `retries` from 1 through 10 and `timeout` greater than zero through 600 seconds.
+| Field | Required | Default and validation |
+|---|---:|---|
+| `url` | Yes | Must be a nonblank string and pass the HTTP(S)/SSRF guard. |
+| `sitekey` | No | `null`; a nonempty value skips detection, while `null` or an empty string runs detection. |
+| `proxy` | No | `null`; accepts the proxy forms supported by the library. |
+| `invisible` | No | `true`; compatible boolean representations are coerced by Pydantic. |
+| `retries` | No | `1`; coerced to an integer when compatible, then constrained from `1` through `10`. |
+| `timeout` | No | `null`, which uses `api.SOLVE_TIMEOUT_S`; otherwise coerced to a number when compatible and constrained to greater than `0` through `600` seconds. |
+
+Unknown fields are forbidden and the body must be a JSON object, but scalar validation is not globally strict: compatible values such as `"2"` for `retries` or `"false"` for `invisible` can be coerced.
 
 ```bash
 curl -X POST http://127.0.0.1:5000/solve \
@@ -302,7 +361,9 @@ curl -X POST http://127.0.0.1:5000/solve \
   -d '{"url":"https://example.com/login","retries":2}'
 ```
 
-A completed synchronous request returns the standard solve result with HTTP `200`, or `502` when solving completed without a token. If the request wait budget expires while work continues, `/solve` returns `202`, a `job_id`, a `Location` header, and a `poll` URL.
+A completed successful request returns the standard solve result with HTTP `200`. A completed result with `success=false` returns `502`. If the request wait budget expires while work continues, `/solve` returns `202`, the serialized job, a `message`, a `poll` URL, and a `Location` header. Queue saturation returns `503` with `retry_after: 5` in the JSON body. A worker-level job error returns `500`.
+
+When `api.RETURN_TOKENS=false`, result-bearing completed solve and `done` job responses set `token` to `null` and add `token_withheld: true`. Queued/running snapshots and worker-error responses have no result token to withhold, so they do not add that marker.
 
 ### Asynchronous jobs
 
@@ -313,7 +374,7 @@ curl -X POST http://127.0.0.1:5000/jobs \
   -d '{"url":"https://example.com/login"}'
 ```
 
-Queued response:
+Accepted-job snapshot example (`202` with `Location: /jobs/<id>`):
 
 ```json
 {
@@ -327,13 +388,115 @@ Queued response:
 }
 ```
 
+A worker can pick up or even finish the job before this response is serialized, so the snapshot may already report `running`, `done`, or `error` instead of `queued`.
+
 Poll with:
 
 ```bash
 curl http://127.0.0.1:5000/jobs/ab12cd34 -H "X-API-Key: <API_KEY>"
 ```
 
-Jobs can be `queued`, `running`, `done`, or `error`. Completed jobs are retained for `api.JOB_TTL_S`, subject to `api.JOB_MAX_RETAINED`. The queue is bounded; a full queue returns `503` rather than growing indefinitely.
+All serialized jobs contain `job_id`, `status`, `url`, `queued_for`, and `solve_time`. `success` is `null` while queued or running. A `done` job adds the standard solve fields; an `error` job adds `success=false` and `error`.
+
+Jobs can be `queued`, `running`, `done`, or `error`. Finished jobs older than `api.JOB_TTL_S` become eligible for removal, and `api.JOB_MAX_RETAINED` is the target maximum used when trimming finished jobs. Cleanup is not continuous or background-driven: TTL eviction and cap enforcement run only when a later job is submitted. Therefore an expired job can remain retrievable through `GET /jobs/<id>` or `GET /jobs` and continue contributing to the `retained_jobs` aggregate shown by `/health` and `/stats` until another submission triggers a sweep. The retained count can also remain above the configured target when multiple in-flight jobs finish after the last sweep. In-flight jobs themselves are never removed by the cap.
+
+`GET /jobs` defaults `limit` to `50`. Any parseable integer is accepted and clamped to `1` through `500`; a non-integer returns `400`. The response is:
+
+```json
+{
+  "count": 1,
+  "jobs": [
+    {
+      "job_id": "ab12cd34",
+      "status": "running",
+      "url": "https://example.com/login",
+      "queued_for": 0.012,
+      "solve_time": 1.5,
+      "success": null
+    }
+  ],
+  "pool": {
+    "workers": 2,
+    "started": true,
+    "pool_enabled": true,
+    "browser_launches": 2,
+    "queued": 0,
+    "running": 1,
+    "completed": 0,
+    "failed": 0,
+    "retained_jobs": 1,
+    "queue_capacity": 32
+  }
+}
+```
+
+### Detection endpoint
+
+`POST /detect` accepts only `url` and optional `proxy`:
+
+```json
+{
+  "url": "https://example.com/login",
+  "proxy": "socks5://user:pass@proxy.example:1080"
+}
+```
+
+A match returns `200`:
+
+```json
+{
+  "success": true,
+  "sitekey": "0x4AAAAAAA...",
+  "method": "html"
+}
+```
+
+No match returns `404` with `{"success": false, "error": "Sitekey not found"}`. An invalid body or blocked URL returns `400`; an internal detection error returns `500`.
+
+### Sitekeys and statistics
+
+`GET /sitekeys` supports:
+
+| Query | Behavior |
+|---|---|
+| `status` | Exact status-string filter; normal stored values are `active`, `inactive`, and `unknown`. Other strings are not rejected and normally produce an empty result. |
+| `domain` | Exact domain lookup. Ignored when `q` is also supplied. |
+| `q` | Free-text database search. |
+| `limit` | Defaults to `100`; any parseable integer is clamped to `1` through `1000`, while a non-integer returns `400`. |
+
+The response contains `count`, `total`, and a `sitekeys` array. Each item contains `sitekey`, `platform`, `domain`, `status`, `solve_count`, `success_count`, `success_rate`, `last_seen`, `token_fresh`, `token_expires_in`, and `tags`. Tokens themselves are not returned by this endpoint.
+
+`GET /stats` returns `success=true`; database fields `total_sitekeys`, `active_sitekeys`, `inactive_sitekeys`, `unknown_sitekeys`, `total_domains`, `total_solve_attempts`, `successful_solves`, `success_rate`, `avg_solve_time`, and `fresh_tokens`; plus the `pool` object shown above.
+
+### Service and health payloads
+
+`GET /` returns `name`, package `version`, `auth_required`, and an endpoint index. `GET /health` returns `status`, `service`, package `version`, a dependency-status map, and current `pool` statistics. These two endpoints are public and bypass API-key and rate-limit checks.
+
+### Errors and status codes
+
+The common error envelope is:
+
+```json
+{
+  "success": false,
+  "error": "Error message"
+}
+```
+
+Some errors add context such as `retry_after` or `job_id`. Unhandled application errors are logged with details but return a generic message.
+
+| Status | Meaning in this API |
+|---:|---|
+| `200` | Successful read/detection/solve, or a queued/running job poll. |
+| `202` | Job accepted, or `/solve` is still working and must be polled. |
+| `400` | Missing/malformed/schema-invalid JSON, unsafe URL, or non-integer `limit`. |
+| `401` | Missing or invalid API key when authentication is enabled. |
+| `404` | Endpoint/job not found, or `/detect` found no sitekey. |
+| `405` | Method not allowed. |
+| `429` | Rate limit exceeded; includes JSON `retry_after` and a `Retry-After` header. |
+| `500` | Worker, detection, or internal server error. |
+| `502` | Solving completed but returned `success=false`. |
+| `503` | The bounded job queue is full. |
 
 ### Browser pool
 
@@ -402,20 +565,21 @@ Useful settings include:
 | `mouse` | Movement speeds, delays, and `PATH_MAX_STEPS`. |
 | `solver` | Widget polling, click offsets, `SOLVE_TIMEOUT_S`, and `PAGE_LOAD_TIMEOUT_MS`. |
 | `retry` | `MAX_RETRIES`, exponential delay bounds, rate-limit delay, and jitter. |
-| `logging` | console/file levels, rotation, retention, compression, and JSON file output. |
-| `storage` | database/results paths, token redaction, preview length, and token TTL. |
-| `api` | bind/auth/rate limits, SSRF policy, request budgets, token responses, pool, queue, and job retention. |
-| `batch` | worker defaults/limit, dispatch stagger, and continue-on-error behavior. |
+| `logging` | Console/file levels, rotation, retention, compression, and JSON file output. |
+| `storage` | Database path, result-writer fallback path, token redaction, preview length, and token TTL. See the CLI output-path caveat above. |
+| `api` | Bind/auth/rate limits, SSRF policy, request budgets, token responses, pool, queue, and submit-triggered job retention cleanup. |
+| `batch` | Worker defaults/limit, dispatch stagger, and continue-on-error behavior. |
 
 Run `python main.py config` for every current setting, its effective value, and its environment-variable name. Invalid files, unknown fields, and out-of-range values are reported; startup falls back to defaults with a warning if global config loading fails.
 
 ## Local data and generated files
 
-- `results.txt` is newline-delimited JSON written by CLI solve and batch commands.
+- `results.txt` is newline-delimited JSON written by CLI `solve`, `batch`, and `detect` unless `--output` is supplied. Records contain `url`, `sitekey`, `token`, `status`, `error`, and `timestamp`.
+- Result files can contain complete solved tokens. `storage.REDACT_STORED_TOKENS` protects database storage, not JSONL result output; protect and delete result files accordingly.
 - `captcha_database.json` stores discovered sitekeys and solve metadata using atomic replacement under a lock.
-- Stored tokens are truncated by default (`storage.REDACT_STORED_TOKENS=true`).
+- Database tokens are truncated by default (`storage.REDACT_STORED_TOKENS=true`).
 - `token_obtained_at` and `storage.TOKEN_TTL_S` drive freshness reporting; a stored token is not a reusable login session.
-- `sitekeys export` creates `SITEKEYS.md`, `sitekeys.csv`, or `sitekeys.json`.
+- `sitekeys export` creates `SITEKEYS.md`, `sitekeys.csv`, or `sitekeys.json` unless another output path is supplied.
 - Logs are written below `logs/` with configurable rotation and retention.
 
 These runtime files, local YAML overrides, virtual environments, caches, coverage output, egg-info, and local tool state are excluded by `.gitignore`. Do not force-add tokens, credentials, logs, databases, or generated exports.
